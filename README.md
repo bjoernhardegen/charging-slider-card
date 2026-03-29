@@ -17,7 +17,6 @@ A Home Assistant Lovelace custom card providing a multi-handle slider for 2–3 
 - Show current SoC value as secondary text below the title (configurable)
 - Graphical card editor with entity pickers, icon picker, layout selector
 - DE / EN localization
-- Keyboard accessible (Arrow keys, Shift+Arrow for larger steps)
 
 ---
 
