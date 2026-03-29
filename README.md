@@ -27,7 +27,7 @@ A Home Assistant Lovelace custom card providing a multi-handle slider for 2–3 
 
 1. In Home Assistant, open **HACS**
 2. Click the 3-dot menu → **Custom repositories**
-3. Enter `https://github.com/bjoernhardegen/charging-slider-card`, category: **Plugin**
+3. Enter `https://github.com/bjoernhardegen/charging-slider-card`, category: **Dashboard**
 4. Click **Add** → find "Charging Slider Card" in the list → **Download**
 5. Reload your browser — no manual cache flush needed
 
