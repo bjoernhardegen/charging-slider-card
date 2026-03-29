@@ -16,6 +16,7 @@ export const cardStyles = css`
   ha-card.layout-inline .card-content {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
     padding: 0 16px;
     min-height: 56px;
@@ -46,12 +47,40 @@ export const cardStyles = css`
     color: var(--primary-text-color);
   }
 
+  .csc-secondary-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  ha-card.layout-bottom .csc-secondary-info {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+  }
+
   .csc-state {
     font-size: 12px;
     color: var(--primary-text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .csc-charging-time {
+    font-size: 12px;
+    color: var(--primary-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  ha-card.layout-inline .csc-charging-time {
+    flex: 0 0 100%;
+    padding-left: 36px;
+    padding-bottom: 8px;
+    margin-top: -8px;
   }
 
   ha-card.layout-inline .csc-slider-wrap {

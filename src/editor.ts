@@ -15,6 +15,8 @@ interface FormData {
   color_max: string;
   soc_entity: string;
   color_soc: string;
+  charging_time_entity: string;
+  charging_time_color: string;
   show_state: boolean;
   hide_state_when_zero: boolean;
 }
@@ -36,6 +38,8 @@ interface Translations {
   color_max: string;
   soc_entity: string;
   color_soc: string;
+  charging_time_entity: string;
+  charging_time_color: string;
   show_state: string;
   hide_state_when_zero: string;
 }
@@ -59,6 +63,8 @@ const TRANSLATIONS: Record<string, Translations> = {
     color_max: 'Farbe Maximum',
     soc_entity: 'Ladestand-Entität (optional)',
     color_soc: 'Farbe Ladestand',
+    charging_time_entity: 'Ladezeit-Entität (optional)',
+    charging_time_color: 'Textfarbe Ladezeit',
     show_state: 'Ladezustand anzeigen',
     hide_state_when_zero: 'Ausblenden wenn 0',
   },
@@ -79,6 +85,8 @@ const TRANSLATIONS: Record<string, Translations> = {
     color_max: 'Maximum color',
     soc_entity: 'State of charge entity (optional)',
     color_soc: 'State of charge color',
+    charging_time_entity: 'Charging time entity (optional)',
+    charging_time_color: 'Charging time text color',
     show_state: 'Show state',
     hide_state_when_zero: 'Hide when zero',
   },
@@ -118,10 +126,12 @@ function buildSchema(t: Translations, hasIdeal: boolean) {
       type: 'grid',
       name: '',
       schema: [
-        { name: 'show_state',          label: t.show_state,          selector: { boolean: {} } },
+        { name: 'show_state',           label: t.show_state,           selector: { boolean: {} } },
         { name: 'hide_state_when_zero', label: t.hide_state_when_zero, selector: { boolean: {} } },
       ],
     },
+    { name: 'charging_time_entity', label: t.charging_time_entity, selector: { entity: { domain: ['sensor', 'input_text'] } } },
+    { name: 'charging_time_color',  label: t.charging_time_color,  selector: { 'ui-color': {} } },
   ];
 }
 
@@ -148,6 +158,8 @@ export class ChargingSliderCardEditor extends LitElement {
       color_max:    this._config?.colors?.max     ?? '',
       soc_entity:   this._config?.entities?.soc   ?? '',
       color_soc:    this._config?.colors?.soc     ?? '',
+      charging_time_entity: this._config?.entities?.charging_time ?? '',
+      charging_time_color: this._config?.charging_time_color ?? 'primary',
       show_state:            this._config?.show_state            ?? false,
       hide_state_when_zero:  this._config?.hide_state_when_zero  ?? false,
     };
@@ -169,6 +181,9 @@ export class ChargingSliderCardEditor extends LitElement {
     if (d.icon_color) config.icon_color = d.icon_color; else delete config.icon_color;
     if (d.ideal_entity) config.entities.ideal = d.ideal_entity;
     if (d.soc_entity)   config.entities.soc   = d.soc_entity;
+    if (d.charging_time_entity) config.entities.charging_time = d.charging_time_entity;
+    if (d.charging_time_color) config.charging_time_color = d.charging_time_color;
+    else delete config.charging_time_color;
 
     const colors: ChargingSliderCardConfig['colors'] = {};
     if (d.color_min)   colors.min   = d.color_min;

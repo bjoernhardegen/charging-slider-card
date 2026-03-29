@@ -65,9 +65,11 @@ export class ChargingSliderCard extends LitElement {
 
     if (!this._isDragging) {
       const socId = this._config?.entities?.soc;
+      const chargingTimeId = this._config?.entities?.charging_time;
       const changed = this._handles.some(
         (h) => old?.states[h.entityId] !== hass.states[h.entityId]
-      ) || !!(socId && old?.states[socId] !== hass.states[socId]);
+      ) || !!(socId && old?.states[socId] !== hass.states[socId])
+        || !!(chargingTimeId && old?.states[chargingTimeId] !== hass.states[chargingTimeId]);
       if (changed) {
         this._syncFromHass();
         this._updateDOM();
@@ -126,8 +128,10 @@ export class ChargingSliderCard extends LitElement {
 
   protected render() {
     if (!this._config) return html``;
-    const { layout = 'inline', title, icon, icon_color, show_state } = this._config;
+    const { layout = 'inline', title, icon, icon_color, show_state, entities } = this._config;
     const iconColorCss = uiColorToCss(icon_color);
+    const hasChargingTime = !!entities?.charging_time;
+    const isBottom = layout === 'bottom';
 
     return html`
       <ha-card class="layout-${layout}">
@@ -138,7 +142,12 @@ export class ChargingSliderCard extends LitElement {
                   ${icon ? html`<ha-icon class="csc-icon" .icon=${icon} style=${iconColorCss ? `color:${iconColorCss}` : ''}></ha-icon>` : ''}
                   <div class="csc-info">
                     ${title ? html`<div class="csc-title">${title}</div>` : ''}
-                    ${show_state ? html`<div class="csc-state"></div>` : ''}
+                    ${show_state || (hasChargingTime && isBottom) ? html`
+                      <div class="csc-secondary-info">
+                        ${show_state ? html`<div class="csc-state"></div>` : ''}
+                        ${hasChargingTime && isBottom ? html`<div class="csc-charging-time"></div>` : ''}
+                      </div>
+                    ` : ''}
                   </div>
                 </div>
               `
@@ -151,6 +160,7 @@ export class ChargingSliderCard extends LitElement {
             </div>
             <div class="csc-legend"></div>
           </div>
+          ${hasChargingTime && !isBottom ? html`<div class="csc-charging-time"></div>` : ''}
         </div>
       </ha-card>
     `;
@@ -275,6 +285,7 @@ export class ChargingSliderCard extends LitElement {
     const fill = this.shadowRoot.querySelector<HTMLElement>('.csc-fill');
     const socEl = this.shadowRoot.querySelector<HTMLElement>('.csc-soc');
     const stateEl = this.shadowRoot.querySelector<HTMLElement>('.csc-state');
+    const chargingTimeEl = this.shadowRoot.querySelector<HTMLElement>('.csc-charging-time');
 
     if (socEl) {
       if (this._socValue !== null && !isNaN(this._socValue)) {
@@ -295,6 +306,14 @@ export class ChargingSliderCard extends LitElement {
       } else {
         stateEl.textContent = '';
       }
+    }
+
+    if (chargingTimeEl) {
+      const ctId = this._config?.entities?.charging_time;
+      const state = ctId ? (this._hass?.states[ctId]?.state ?? '') : '';
+      chargingTimeEl.textContent = (state && state !== 'unavailable' && state !== 'unknown') ? state : '';
+      const ctColorCss = uiColorToCss(this._config?.charging_time_color);
+      chargingTimeEl.style.color = ctColorCss ?? 'var(--primary-text-color)';
     }
 
     this._values.forEach((val, i) => {

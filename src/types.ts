@@ -5,6 +5,7 @@ export interface ChargingSliderCardConfig {
   icon_color?: string;
   show_state?: boolean;
   hide_state_when_zero?: boolean;
+  charging_time_color?: string;
   /** "inline" = slider next to title (default), "bottom" = slider below title with legend */
   layout?: 'inline' | 'bottom';
   entities: {
@@ -12,6 +13,7 @@ export interface ChargingSliderCardConfig {
     ideal?: string;
     max: string;
     soc?: string;
+    charging_time?: string;
   };
   colors?: {
     min?: string;    // ui-color value e.g. "red", "blue", "primary"
