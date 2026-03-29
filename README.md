@@ -23,6 +23,16 @@ A Home Assistant Lovelace custom card providing a multi-handle slider for 2–3 
 
 ## Installation
 
+### Via HACS (recommended)
+
+1. In Home Assistant, open **HACS**
+2. Click the 3-dot menu → **Custom repositories**
+3. Enter `https://github.com/bjoernhardegen/charging-slider-card`, category: **Plugin**
+4. Click **Add** → find "Charging Slider Card" in the list → **Download**
+5. Reload your browser — no manual cache flush needed
+
+### Manual
+
 ```bash
 npm install
 npm run build
@@ -97,24 +107,12 @@ Color values follow HA's `ui-color` selector: `primary`, `accent`, `red`, `pink`
 ### Inline (default)
 Title/icon occupy 50% of the card width, slider takes the other 50%.
 
-```
-┌─────────────────────────────────────────────┐
-│  ⚡ Ladeeinstellungen   ●────●──────●       │
-│     58 %                                    │
-└─────────────────────────────────────────────┘
-```
+![Inline layout](assets/screenshot-inline.png)
 
 ### Bottom
 Slider spans the full card width below the title. Value labels are shown beneath each handle.
 
-```
-┌─────────────────────────────────────────────┐
-│  ⚡ Ladeeinstellungen                       │
-│     58 %                                    │
-│  ████──●───────────●───────────────●──      │
-│        15%         58%             80%      │
-└─────────────────────────────────────────────┘
-```
+![Bottom layout](assets/screenshot-bottom.png)
 
 ---
 
