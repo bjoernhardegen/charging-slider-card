@@ -4,6 +4,8 @@ A Home Assistant Lovelace custom card providing a multi-handle slider for 2–3 
 
 **Use case:** Wallbox charging settings — control minimum charge, optional ideal charge target, and maximum charge in a single card.
 
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bjoernhardegen&repository=charging-slider-card&category=dashboard)
+
 ---
 
 ## Features
@@ -141,3 +143,19 @@ The card uses imperative DOM management for slider handles to avoid Lit re-rende
 ```bash
 npm run build   # builds dist/charging-slider-card.js
 ```
+
+### Releasing a new version
+
+Use an **annotated tag** — the message is used as the GitHub Release body and displayed in HACS:
+
+```bash
+git tag -a v1.0.2 -m "## What's new
+
+- Feature A
+- Feature B"
+
+git push origin main
+git push origin v1.0.2
+```
+
+GitHub Actions builds and publishes the release automatically. The tag message appears as release notes in HACS.
