@@ -4,8 +4,6 @@ A Home Assistant Lovelace custom card providing a multi-handle slider for 2–3 
 
 **Use case:** Wallbox charging settings — control minimum charge, optional ideal charge target, and maximum charge in a single card.
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bjoernhardegen&repository=charging-slider-card&category=dashboard)
-
 ---
 
 ## Features
