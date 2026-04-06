@@ -19,6 +19,9 @@ interface FormData {
   charging_time_color: string;
   show_state: boolean;
   hide_state_when_zero: boolean;
+  override_entity: string;
+  override_ignore: 'ideal' | 'min' | 'min_ideal' | '';
+  color_override: string;
 }
 
 interface Translations {
@@ -42,6 +45,12 @@ interface Translations {
   charging_time_color: string;
   show_state: string;
   hide_state_when_zero: string;
+  override_entity: string;
+  override_ignore: string;
+  override_ignore_ideal: string;
+  override_ignore_min: string;
+  override_ignore_min_ideal: string;
+  color_override: string;
 }
 
 
@@ -67,6 +76,12 @@ const TRANSLATIONS: Record<string, Translations> = {
     charging_time_color: 'Textfarbe Ladezeit',
     show_state: 'Ladezustand anzeigen',
     hide_state_when_zero: 'Ausblenden wenn 0',
+    override_entity: 'Override-Entität (optional)',
+    override_ignore: 'Ignorierte Handles',
+    override_ignore_ideal: 'Nur Ideal',
+    override_ignore_min: 'Nur Minimum',
+    override_ignore_min_ideal: 'Min + Ideal',
+    color_override: 'Farbe Override-Icon',
   },
   en: {
     title: 'Title',
@@ -89,10 +104,16 @@ const TRANSLATIONS: Record<string, Translations> = {
     charging_time_color: 'Charging time text color',
     show_state: 'Show state',
     hide_state_when_zero: 'Hide when zero',
+    override_entity: 'Override entity (optional)',
+    override_ignore: 'Ignored handles',
+    override_ignore_ideal: 'Ideal only',
+    override_ignore_min: 'Min only',
+    override_ignore_min_ideal: 'Min + Ideal',
+    color_override: 'Override icon color',
   },
 };
 
-function buildSchema(t: Translations, hasIdeal: boolean) {
+function buildSchema(t: Translations, hasIdeal: boolean, hasOverride: boolean) {
   return [
     { name: 'title',      label: t.title,      selector: { text: {} } },
     { name: 'icon',       label: t.icon,       selector: { icon: {} } },
@@ -132,6 +153,24 @@ function buildSchema(t: Translations, hasIdeal: boolean) {
     },
     { name: 'charging_time_entity', label: t.charging_time_entity, selector: { entity: { domain: ['sensor', 'input_text'] } } },
     { name: 'charging_time_color',  label: t.charging_time_color,  selector: { 'ui-color': {} } },
+    { name: 'override_entity', label: t.override_entity, selector: { entity: { domain: ['binary_sensor', 'switch', 'input_boolean'] } } },
+    ...(hasOverride ? [
+      {
+        name: 'override_ignore',
+        label: t.override_ignore,
+        selector: {
+          select: {
+            mode: 'list',
+            options: [
+              { value: 'ideal',     label: t.override_ignore_ideal },
+              { value: 'min',       label: t.override_ignore_min },
+              { value: 'min_ideal', label: t.override_ignore_min_ideal },
+            ],
+          },
+        },
+      },
+      { name: 'color_override', label: t.color_override, selector: { 'ui-color': {} } },
+    ] : []),
   ];
 }
 
@@ -162,6 +201,9 @@ export class ChargingSliderCardEditor extends LitElement {
       charging_time_color: this._config?.charging_time_color ?? 'primary',
       show_state:            this._config?.show_state            ?? false,
       hide_state_when_zero:  this._config?.hide_state_when_zero  ?? false,
+      override_entity: this._config?.entities?.override_entity ?? '',
+      override_ignore: this._config?.override_ignore ?? 'ideal',
+      color_override:  this._config?.colors?.override ?? '',
     };
   }
 
@@ -184,12 +226,17 @@ export class ChargingSliderCardEditor extends LitElement {
     if (d.charging_time_entity) config.entities.charging_time = d.charging_time_entity;
     if (d.charging_time_color) config.charging_time_color = d.charging_time_color;
     else delete config.charging_time_color;
+    if (d.override_entity) config.entities.override_entity = d.override_entity;
+    else delete config.entities.override_entity;
+    if (d.override_ignore) config.override_ignore = d.override_ignore as ChargingSliderCardConfig['override_ignore'];
+    else delete config.override_ignore;
 
     const colors: ChargingSliderCardConfig['colors'] = {};
-    if (d.color_min)   colors.min   = d.color_min;
-    if (d.color_ideal) colors.ideal = d.color_ideal;
-    if (d.color_max)   colors.max   = d.color_max;
-    if (d.color_soc)   colors.soc   = d.color_soc;
+    if (d.color_min)      colors.min      = d.color_min;
+    if (d.color_ideal)    colors.ideal    = d.color_ideal;
+    if (d.color_max)      colors.max      = d.color_max;
+    if (d.color_soc)      colors.soc      = d.color_soc;
+    if (d.color_override) colors.override = d.color_override;
 
     if (Object.keys(colors).length > 0) config.colors = colors;
     else delete config.colors;
@@ -209,10 +256,11 @@ export class ChargingSliderCardEditor extends LitElement {
   protected render() {
     if (!this.hass || !this._config) return nothing;
 
-    const lang     = this.hass.language ?? 'en';
-    const t        = TRANSLATIONS[lang] ?? TRANSLATIONS.en;
-    const hasIdeal = !!this._config.entities?.ideal;
-    const schema   = buildSchema(t, hasIdeal);
+    const lang        = this.hass.language ?? 'en';
+    const t           = TRANSLATIONS[lang] ?? TRANSLATIONS.en;
+    const hasIdeal    = !!this._config.entities?.ideal;
+    const hasOverride = !!this._config.entities?.override_entity;
+    const schema      = buildSchema(t, hasIdeal, hasOverride);
 
     return html`
       <ha-form

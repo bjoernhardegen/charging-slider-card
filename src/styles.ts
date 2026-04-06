@@ -29,13 +29,18 @@ export const cardStyles = css`
     align-items: center;
     gap: 12px;
     min-width: 0;
-    overflow: hidden;
   }
 
   .csc-info {
     display: flex;
     flex-direction: column;
     min-width: 0;
+  }
+
+  ha-card.layout-inline .csc-info {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
   }
 
   ha-card.layout-inline .csc-title {
@@ -308,5 +313,52 @@ export const cardStyles = css`
 
   .csc-legend-item[data-handle='max'] {
     color: var(--warning-color, #ff9800);
+  }
+
+  /* ================================================================
+     OVERRIDE TOGGLE — icon button in header
+     ================================================================ */
+
+  .csc-override-toggle {
+    background: none;
+    border: none;
+    padding: 4px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--secondary-text-color);
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+    --mdc-icon-size: 20px;
+    transition: opacity 150ms ease, background 150ms ease;
+  }
+
+  .csc-override-toggle:hover:not([disabled]) {
+    background: var(--secondary-background-color);
+    opacity: 1;
+  }
+
+  .csc-override-toggle.is-active {
+    color: var(--csc-override-color, var(--warning-color, #ff9800));
+    opacity: 1;
+  }
+
+  .csc-override-toggle[disabled] {
+    cursor: default;
+  }
+
+  /* ================================================================
+     OVERRIDDEN HANDLES — dimmed when override is active
+     ================================================================ */
+
+  .csc-handle.is-overridden {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .csc-legend-item.is-overridden {
+    opacity: 0.3;
   }
 `;

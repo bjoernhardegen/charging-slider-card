@@ -17,6 +17,15 @@ jobs:
           node-version: '22'
       - run: npm ci
       - run: npm run build
+      - name: Extract tag message
+        id: tag
+        run: |
+          {
+            echo 'body<<EOF'
+            git tag -l --format='%(contents)' "${{ github.ref_name }}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/charging-slider-card.js
+          body: ${{ steps.tag.outputs.body }}

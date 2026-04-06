@@ -45,6 +45,8 @@ export class ChargingSliderCard extends LitElement {
 
   private _socValue: number | null = null;
 
+  @state() private _overrideActive = false;
+
   private _isDragging = false;
   private _hasBuiltHandles = false;
 
@@ -66,10 +68,12 @@ export class ChargingSliderCard extends LitElement {
     if (!this._isDragging) {
       const socId = this._config?.entities?.soc;
       const chargingTimeId = this._config?.entities?.charging_time;
+      const overrideId = this._config?.entities?.override_entity;
       const changed = this._handles.some(
         (h) => old?.states[h.entityId] !== hass.states[h.entityId]
       ) || !!(socId && old?.states[socId] !== hass.states[socId])
-        || !!(chargingTimeId && old?.states[chargingTimeId] !== hass.states[chargingTimeId]);
+        || !!(chargingTimeId && old?.states[chargingTimeId] !== hass.states[chargingTimeId])
+        || !!(overrideId && old?.states[overrideId] !== hass.states[overrideId]);
       if (changed) {
         this._syncFromHass();
         this._updateDOM();
@@ -128,15 +132,20 @@ export class ChargingSliderCard extends LitElement {
 
   protected render() {
     if (!this._config) return html``;
-    const { layout = 'inline', title, icon, icon_color, show_state, entities } = this._config;
+    const { layout = 'inline', title, icon, icon_color, show_state, entities, colors } = this._config;
     const iconColorCss = uiColorToCss(icon_color);
     const hasChargingTime = !!entities?.charging_time;
     const isBottom = layout === 'bottom';
+    const overrideEntityId = entities?.override_entity;
+    const overrideDomain = overrideEntityId?.split('.')[0];
+    const canToggle = overrideDomain === 'switch' || overrideDomain === 'input_boolean';
+    const overrideColorCss = uiColorToCss(colors?.override);
+    const showHeader = !!(title || icon || overrideEntityId);
 
     return html`
       <ha-card class="layout-${layout}">
         <div class="card-content">
-          ${title || icon
+          ${showHeader
             ? html`
                 <div class="csc-header-row">
                   ${icon ? html`<ha-icon class="csc-icon" .icon=${icon} style=${iconColorCss ? `color:${iconColorCss}` : ''}></ha-icon>` : ''}
@@ -149,6 +158,15 @@ export class ChargingSliderCard extends LitElement {
                       </div>
                     ` : ''}
                   </div>
+                  ${overrideEntityId ? html`
+                    <button
+                      class="csc-override-toggle${this._overrideActive ? ' is-active' : ''}"
+                      style=${this._overrideActive && overrideColorCss ? `--csc-override-color:${overrideColorCss}` : ''}
+                      ?disabled=${!canToggle}
+                      @click=${this._toggleOverride}
+                      title=${this._overrideActive ? 'Override aktiv' : 'Override inaktiv'}
+                    ><ha-icon .icon=${this._overrideActive ? 'mdi:lightning-bolt' : 'mdi:lightning-bolt-outline'}></ha-icon></button>
+                  ` : ''}
                 </div>
               `
             : ''}
@@ -205,6 +223,14 @@ export class ChargingSliderCard extends LitElement {
       this._socValue = st ? parseFloat(st.state) : null;
     } else {
       this._socValue = null;
+    }
+
+    const overrideId = entities.override_entity;
+    if (overrideId) {
+      const st = this._hass!.states[overrideId];
+      this._overrideActive = st ? st.state === 'on' : false;
+    } else {
+      this._overrideActive = false;
     }
   }
 
@@ -316,12 +342,14 @@ export class ChargingSliderCard extends LitElement {
       chargingTimeEl.style.color = ctColorCss ?? 'var(--primary-text-color)';
     }
 
+    const ignoredKeys = this._overrideIgnoredKeys();
     this._values.forEach((val, i) => {
       const el = handles[i];
       if (!el) return;
       const pct = this._valueToPct(val);
       el.style.left = `${pct}%`;
       el.setAttribute('aria-valuenow', String(val));
+      el.classList.toggle('is-overridden', ignoredKeys.has(this._handles[i].key));
 
       const tooltip = el.querySelector<HTMLElement>('.csc-tooltip');
       if (tooltip) {
@@ -349,6 +377,7 @@ export class ChargingSliderCard extends LitElement {
       items.forEach((item, i) => {
         item.style.left = `${this._valueToPct(this._values[i])}%`;
         item.textContent = this._formatValue(this._values[i], this._handles[i]);
+        item.classList.toggle('is-overridden', ignoredKeys.has(this._handles[i].key));
       });
     }
   }
@@ -468,12 +497,33 @@ export class ChargingSliderCard extends LitElement {
     return result;
   }
 
+  // ─── Override toggle ──────────────────────────────────────────────────────
+
+  private _toggleOverride(): void {
+    const entityId = this._config?.entities?.override_entity;
+    if (!entityId) return;
+    const domain = entityId.split('.')[0];
+    if (domain !== 'switch' && domain !== 'input_boolean') return;
+    this._hass?.callService(domain, 'toggle', { entity_id: entityId });
+  }
+
+  private _overrideIgnoredKeys(): Set<HandleKey> {
+    if (!this._overrideActive) return new Set();
+    const setting = this._config?.override_ignore ?? 'ideal';
+    if (setting === 'ideal') return new Set<HandleKey>(['ideal']);
+    if (setting === 'min') return new Set<HandleKey>(['min']);
+    if (setting === 'min_ideal') return new Set<HandleKey>(['min', 'ideal']);
+    return new Set();
+  }
+
   // ─── HA Service call ──────────────────────────────────────────────────────
 
   private _persistValues(): void {
     if (!this._hass) return;
 
+    const ignoredKeys = this._overrideIgnoredKeys();
     this._handles.forEach((h, i) => {
+      if (ignoredKeys.has(h.key)) return;
       const newVal = this._values[i];
       const oldVal = parseFloat(this._hass!.states[h.entityId].state);
       if (Math.abs(newVal - oldVal) < 0.001) return;

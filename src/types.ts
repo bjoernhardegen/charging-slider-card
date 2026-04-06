@@ -14,12 +14,16 @@ export interface ChargingSliderCardConfig {
     max: string;
     soc?: string;
     charging_time?: string;
+    override_entity?: string;
   };
+  /** Which handles to dim and disable when override_entity is active */
+  override_ignore?: 'ideal' | 'min' | 'min_ideal';
   colors?: {
     min?: string;    // ui-color value e.g. "red", "blue", "primary"
     ideal?: string;
     max?: string;
     soc?: string;
+    override?: string;
   };
 }
 

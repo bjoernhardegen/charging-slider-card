@@ -4,6 +4,8 @@ A Home Assistant Lovelace custom card providing a multi-handle slider for 2–3 
 
 **Use case:** Wallbox charging settings — control minimum charge, optional ideal charge target, and maximum charge in a single card.
 
+![Charging Slider Card demo](assets/recording_charging-slider.gif)
+
 ---
 
 ## Features
@@ -16,6 +18,7 @@ A Home Assistant Lovelace custom card providing a multi-handle slider for 2–3 
 - Configurable icon with custom color
 - Custom handle, SoC and charging time colors via HA's native `ui-color` picker
 - Show current SoC value as secondary text below the title (configurable)
+- **Override entity**: Link a `switch` or `input_boolean` to dim and lock configured handles; lightning-bolt icon button in the header toggles the entity
 - Graphical card editor with entity pickers, icon picker, layout selector
 - DE / EN localization
 
@@ -68,17 +71,20 @@ layout: inline              # "inline" (default) | "bottom"
 show_state: true            # show SoC value below title
 hide_state_when_zero: true  # hide state text when value is 0
 entities:
-  min:            number.charging_min
-  ideal:          number.charging_ideal   # optional
-  max:            number.charging_max
-  soc:            sensor.car_battery      # optional, read-only
-  charging_time:  sensor.charging_time_remaining  # optional, read-only
+  min:              number.charging_min
+  ideal:            number.charging_ideal        # optional
+  max:              number.charging_max
+  soc:              sensor.car_battery           # optional, read-only
+  charging_time:    sensor.charging_time_remaining  # optional, read-only
+  override_entity:  switch.charging_override     # optional
+override_ignore: ideal      # "ideal" (default) | "min" | "min_ideal"
 colors:
   min:                blue
   ideal:              green
   max:                orange
   soc:                cyan
   charging_time:      primary
+  override:           orange
 ```
 
 ### Options
@@ -96,10 +102,13 @@ colors:
 | `entities.max` | string | **required** | Entity ID for maximum value (`number` or `input_number`) |
 | `entities.soc` | string | — | Entity ID for state of charge — displayed as read-only bar (`sensor`, `number`, `input_number`) |
 | `entities.charging_time` | string | — | Entity ID for charging time remaining — displayed as secondary text (`sensor`, `input_text`) |
+| `entities.override_entity` | string | — | Entity ID for override toggle (`switch`, `input_boolean`, `binary_sensor`) |
+| `override_ignore` | `ideal` \| `min` \| `min_ideal` | `ideal` | Which handles to dim and lock when override entity is active |
 | `colors.min` | string | `--info-color` | Handle and legend color for min |
 | `colors.ideal` | string | `--success-color` | Handle and legend color for ideal |
 | `colors.max` | string | `--warning-color` | Handle and legend color for max |
 | `colors.soc` | string | `--primary-color` | Color of the SoC bar |
+| `colors.override` | string | `--warning-color` | Color of the override icon button when active |
 | `charging_time_color` | string | `--primary-text-color` | Text color for charging time — any HA `ui-color` value |
 
 Color values follow HA's `ui-color` selector: `primary`, `accent`, `red`, `pink`, `purple`, `deep-purple`, `indigo`, `blue`, `light-blue`, `cyan`, `teal`, `green`, `light-green`, `lime`, `yellow`, `amber`, `orange`, `deep-orange`, `brown`, `grey`, `blue-grey`.
@@ -141,3 +150,19 @@ The card uses imperative DOM management for slider handles to avoid Lit re-rende
 ```bash
 npm run build   # builds dist/charging-slider-card.js
 ```
+
+### Releasing a new version
+
+Use an **annotated tag** — the message is used as the GitHub Release body and displayed in HACS:
+
+```bash
+git tag -a vX.Y.Z -m "## vX.Y.Z — Short description
+
+- Feature A
+- Feature B"
+
+git push origin main
+git push origin vX.Y.Z
+```
+
+GitHub Actions builds and publishes the release automatically. The tag message appears as release notes in HACS.
