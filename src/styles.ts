@@ -156,6 +156,32 @@ export const cardStyles = css`
     opacity: 0.5;
     pointer-events: none;
     z-index: 0;
+    overflow: hidden;
+  }
+
+  .csc-soc::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 100%
+    );
+    transform: translateX(-200%);
+  }
+
+  .csc-soc.is-charging::after {
+    animation: csc-shimmer var(--csc-charging-speed, 2s) linear infinite;
+  }
+
+  @keyframes csc-shimmer {
+    from { transform: translateX(-200%); }
+    to   { transform: translateX(400%); }
   }
 
   .csc-fill {
@@ -209,6 +235,18 @@ export const cardStyles = css`
     box-sizing: border-box;
     transition: box-shadow 150ms ease, transform 150ms ease;
     pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .csc-handle-inner ha-icon {
+    --mdc-icon-size: 16px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    color: currentColor;
+    pointer-events: none;
   }
 
   .csc-handle:focus-visible .csc-handle-inner {
@@ -218,14 +256,17 @@ export const cardStyles = css`
   /* Custom color via --csc-handle-color, falls back to HA theme color */
   .csc-handle[data-handle='min'] .csc-handle-inner {
     border-color: var(--csc-handle-color, var(--info-color, #4fc3f7));
+    color: var(--csc-handle-color, var(--info-color, #4fc3f7));
   }
 
   .csc-handle[data-handle='ideal'] .csc-handle-inner {
     border-color: var(--csc-handle-color, var(--success-color, #4caf50));
+    color: var(--csc-handle-color, var(--success-color, #4caf50));
   }
 
   .csc-handle[data-handle='max'] .csc-handle-inner {
     border-color: var(--csc-handle-color, var(--warning-color, #ff9800));
+    color: var(--csc-handle-color, var(--warning-color, #ff9800));
   }
 
   .csc-icon {

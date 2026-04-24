@@ -14,8 +14,11 @@ export interface ChargingSliderCardConfig {
     max: string;
     soc?: string;
     charging_time?: string;
+    charging_power?: string;
     override_entity?: string;
   };
+  /** Max charging power in watts used to scale animation speed (default: 11000) */
+  charging_power_max?: number;
   /** Which handles to dim and disable when override_entity is active */
   override_ignore?: 'ideal' | 'min' | 'min_ideal';
   colors?: {
@@ -25,6 +28,7 @@ export interface ChargingSliderCardConfig {
     soc?: string;
     override?: string;
   };
+  handle_icons?: Partial<Record<HandleKey, string>>;
 }
 
 export interface NumberEntityState {

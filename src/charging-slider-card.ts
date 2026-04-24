@@ -44,6 +44,7 @@ export class ChargingSliderCard extends LitElement {
   private _globalStep = 1;
 
   private _socValue: number | null = null;
+  private _chargingPower: number | null = null;
 
   @state() private _overrideActive = false;
 
@@ -68,11 +69,13 @@ export class ChargingSliderCard extends LitElement {
     if (!this._isDragging) {
       const socId = this._config?.entities?.soc;
       const chargingTimeId = this._config?.entities?.charging_time;
+      const chargingPowerId = this._config?.entities?.charging_power;
       const overrideId = this._config?.entities?.override_entity;
       const changed = this._handles.some(
         (h) => old?.states[h.entityId] !== hass.states[h.entityId]
       ) || !!(socId && old?.states[socId] !== hass.states[socId])
         || !!(chargingTimeId && old?.states[chargingTimeId] !== hass.states[chargingTimeId])
+        || !!(chargingPowerId && old?.states[chargingPowerId] !== hass.states[chargingPowerId])
         || !!(overrideId && old?.states[overrideId] !== hass.states[overrideId]);
       if (changed) {
         this._syncFromHass();
@@ -225,6 +228,14 @@ export class ChargingSliderCard extends LitElement {
       this._socValue = null;
     }
 
+    const cpId = entities.charging_power;
+    if (cpId) {
+      const st = this._hass!.states[cpId];
+      this._chargingPower = st ? parseFloat(st.state) : null;
+    } else {
+      this._chargingPower = null;
+    }
+
     const overrideId = entities.override_entity;
     if (overrideId) {
       const st = this._hass!.states[overrideId];
@@ -268,6 +279,15 @@ export class ChargingSliderCard extends LitElement {
       el.setAttribute('aria-valuemax', String(h.entityMax));
       el.innerHTML =
         '<div class="csc-handle-inner"></div><div class="csc-tooltip"></div>';
+
+      // Inject optional MDI icon
+      const iconName = this._config?.handle_icons?.[h.key];
+      if (iconName) {
+        const inner = el.querySelector('.csc-handle-inner')!;
+        const icon = document.createElement('ha-icon') as HTMLElement & { icon: string };
+        icon.setAttribute('icon', iconName);
+        inner.appendChild(icon);
+      }
 
       // Apply custom color if configured
       const colorCss = uiColorToCss(this._config?.colors?.[h.key]);
@@ -320,6 +340,18 @@ export class ChargingSliderCard extends LitElement {
         socEl.style.display = '';
       } else {
         socEl.style.display = 'none';
+      }
+
+      const power = this._chargingPower;
+      if (power !== null && !isNaN(power) && power > 0) {
+        const maxPower = this._config?.charging_power_max ?? 11000;
+        const ratio = Math.min(power / maxPower, 1);
+        const duration = 5.0 - ratio * 3.8;
+        socEl.style.setProperty('--csc-charging-speed', `${duration.toFixed(2)}s`);
+        socEl.classList.add('is-charging');
+      } else {
+        socEl.classList.remove('is-charging');
+        socEl.style.removeProperty('--csc-charging-speed');
       }
     }
 

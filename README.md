@@ -14,12 +14,14 @@ A Home Assistant Lovelace custom card providing a multi-handle slider for 2–3 
 - Enforces ordering: min < ideal < max with push behavior
 - Optional state-of-charge (SoC) visualization as a colored bar along the track
 - Optional charging time remaining — displayed as secondary text
+- Optional charging power entity — animates the SoC bar at speed proportional to current power
 - Two layout modes: **Inline** (slider next to title) and **Bottom** (slider below title with legend)
 - Configurable icon with custom color
+- Custom MDI icon per handle (min / ideal / max)
 - Custom handle, SoC and charging time colors via HA's native `ui-color` picker
 - Show current SoC value as secondary text below the title (configurable)
 - **Override entity**: Link a `switch` or `input_boolean` to dim and lock configured handles; lightning-bolt icon button in the header toggles the entity
-- Graphical card editor with entity pickers, icon picker, layout selector
+- Graphical card editor with grouped, collapsible sections (HA Tile Card style)
 - DE / EN localization
 
 ---
@@ -67,24 +69,30 @@ type: custom:charging-slider-card
 title: Ladeeinstellungen
 icon: mdi:ev-station
 icon_color: primary
-layout: inline              # "inline" (default) | "bottom"
-show_state: true            # show SoC value below title
-hide_state_when_zero: true  # hide state text when value is 0
+layout: inline                # "inline" (default) | "bottom"
+show_state: true              # show SoC value below title
+hide_state_when_zero: true    # hide state text when value is 0
+charging_time_color: primary  # text color for charging time
+charging_power_max: 11000     # max power in watts for animation scaling (default: 11000)
 entities:
   min:              number.charging_min
-  ideal:            number.charging_ideal        # optional
+  ideal:            number.charging_ideal           # optional
   max:              number.charging_max
-  soc:              sensor.car_battery           # optional, read-only
+  soc:              sensor.car_battery              # optional, read-only
   charging_time:    sensor.charging_time_remaining  # optional, read-only
-  override_entity:  switch.charging_override     # optional
-override_ignore: ideal      # "ideal" (default) | "min" | "min_ideal"
+  charging_power:   sensor.charging_power           # optional, read-only
+  override_entity:  switch.charging_override        # optional
+override_ignore: ideal        # "ideal" (default) | "min" | "min_ideal"
+handle_icons:
+  min:   mdi:play
+  ideal: mdi:pause
+  max:   mdi:stop
 colors:
-  min:                blue
-  ideal:              green
-  max:                orange
-  soc:                cyan
-  charging_time:      primary
-  override:           orange
+  min:      blue
+  ideal:    green
+  max:      orange
+  soc:      cyan
+  override: orange
 ```
 
 ### Options
@@ -93,23 +101,28 @@ colors:
 |---|---|---|---|
 | `title` | string | — | Card title (optional) |
 | `icon` | string | — | MDI icon, e.g. `mdi:ev-station` (optional) |
-| `icon_color` | string | `#44739e` | Icon color — any HA `ui-color` value (`primary`, `red`, `blue`, …) |
+| `icon_color` | string | — | Icon color — any HA `ui-color` value (`primary`, `red`, `blue`, …) |
 | `layout` | `inline` \| `bottom` | `inline` | Inline: slider next to title. Bottom: slider below title with value legend. |
 | `show_state` | boolean | `false` | Show the SoC value as secondary text below the title |
 | `hide_state_when_zero` | boolean | `false` | Hide the state text when the SoC value is 0 |
+| `charging_time_color` | string | — | Text color for charging time — any HA `ui-color` value |
+| `charging_power_max` | number | `11000` | Maximum charging power in watts — used to scale SoC bar animation speed |
 | `entities.min` | string | **required** | Entity ID for minimum value (`number` or `input_number`) |
 | `entities.ideal` | string | — | Entity ID for ideal/target value (optional) |
 | `entities.max` | string | **required** | Entity ID for maximum value (`number` or `input_number`) |
 | `entities.soc` | string | — | Entity ID for state of charge — displayed as read-only bar (`sensor`, `number`, `input_number`) |
 | `entities.charging_time` | string | — | Entity ID for charging time remaining — displayed as secondary text (`sensor`, `input_text`) |
+| `entities.charging_power` | string | — | Entity ID for current charging power — animates the SoC bar, speed scales with power (`sensor`, `number`, `input_number`) |
 | `entities.override_entity` | string | — | Entity ID for override toggle (`switch`, `input_boolean`, `binary_sensor`) |
 | `override_ignore` | `ideal` \| `min` \| `min_ideal` | `ideal` | Which handles to dim and lock when override entity is active |
-| `colors.min` | string | `--info-color` | Handle and legend color for min |
-| `colors.ideal` | string | `--success-color` | Handle and legend color for ideal |
-| `colors.max` | string | `--warning-color` | Handle and legend color for max |
-| `colors.soc` | string | `--primary-color` | Color of the SoC bar |
-| `colors.override` | string | `--warning-color` | Color of the override icon button when active |
-| `charging_time_color` | string | `--primary-text-color` | Text color for charging time — any HA `ui-color` value |
+| `handle_icons.min` | string | — | MDI icon inside the minimum handle, e.g. `mdi:play` |
+| `handle_icons.ideal` | string | — | MDI icon inside the ideal handle, e.g. `mdi:pause` |
+| `handle_icons.max` | string | — | MDI icon inside the maximum handle, e.g. `mdi:stop` |
+| `colors.min` | string | — | Handle and legend color for min |
+| `colors.ideal` | string | — | Handle and legend color for ideal |
+| `colors.max` | string | — | Handle and legend color for max |
+| `colors.soc` | string | — | Color of the SoC bar |
+| `colors.override` | string | — | Color of the override icon button when active |
 
 Color values follow HA's `ui-color` selector: `primary`, `accent`, `red`, `pink`, `purple`, `deep-purple`, `indigo`, `blue`, `light-blue`, `cyan`, `teal`, `green`, `light-green`, `lime`, `yellow`, `amber`, `orange`, `deep-orange`, `brown`, `grey`, `blue-grey`.
 
